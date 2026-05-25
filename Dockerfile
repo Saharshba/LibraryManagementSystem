@@ -3,9 +3,10 @@
 # Stage 1: build client
 FROM node:20-alpine AS client-builder
 WORKDIR /app
-COPY client/package.json client/package-lock.json* ./client/
+COPY package.json package-lock.json ./
 COPY client/ ./client/
-RUN cd client && npm ci && npm run build
+# Install from the monorepo lockfile and build only the client workspace
+RUN npm ci && npm run build --workspace=client
 
 # Stage 2: build server
 FROM node:20-alpine AS server-builder
