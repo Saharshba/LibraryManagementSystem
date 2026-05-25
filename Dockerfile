@@ -23,6 +23,7 @@ RUN npm ci --omit=dev --workspace=server
 # Final image
 FROM node:20-alpine
 WORKDIR /app
+COPY --from=server-builder /app/node_modules ./node_modules
 COPY --from=server-builder /app/server ./server
 COPY --from=server-builder /app/client/dist ./client/dist
 WORKDIR /app/server
