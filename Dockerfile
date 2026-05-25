@@ -11,6 +11,8 @@ RUN npm ci && npm run build --workspace=client
 # Stage 2: build server
 FROM node:20-alpine AS server-builder
 WORKDIR /app
+# Copy monorepo root package files so workspace installs work
+COPY package.json package-lock.json ./
 COPY server/package.json server/package-lock.json* ./server/
 COPY server/ ./server/
 # Copy built client dist into server for static serving
