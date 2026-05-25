@@ -15,7 +15,8 @@ COPY server/package.json server/package-lock.json* ./server/
 COPY server/ ./server/
 # Copy built client dist into server for static serving
 COPY --from=client-builder /app/client/dist ./client/dist
-RUN cd server && npm ci --production
+# Install server dependencies using the monorepo lockfile via workspace install
+RUN npm ci --omit=dev --workspace=server
 
 # Final image
 FROM node:20-alpine
