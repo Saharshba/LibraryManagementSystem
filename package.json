@@ -1,0 +1,21 @@
+{
+  "name": "library-management-system",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c green,blue \"npm run dev --workspace server\" \"npm run dev --workspace client\"",
+    "build": "npm run build --workspace client",
+    "start": "npm run start --workspace server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  },
+  "dependencies": {
+    "express-rate-limit": "^8.5.2",
+    "mongoose": "^9.6.2",
+    "serverless-http": "^4.0.0"
+  }
+}
