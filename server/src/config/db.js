@@ -10,6 +10,7 @@ const connectDB = async () => {
     connectTimeoutMS: 10000,
     socketTimeoutMS: 10000,
     maxPoolSize: 1,
+    bufferCommands: false,
   });
 };
 
