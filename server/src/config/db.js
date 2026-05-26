@@ -2,65 +2,87 @@ const mongoose = require('mongoose');
 
 mongoose.set('bufferCommands', false);
 
-const CONNECT_TIMEOUT_MS = 8000;
+const CONNECT_TIMEOUT_MS = 6000;
 
-const getCached = () => {
-  if (!global.__libraryMongoose) {
-    global.__libraryMongoose = { conn: null, promise: null };
-  }
+const getUri = () => {
+  const uri = process.env.MONGODB_URI?.trim();
 
-  return global.__libraryMongoose;
-};
-
-const connectDB = async () => {
-  if (!process.env.MONGODB_URI) {
+  if (!uri) {
     throw new Error('MONGODB_URI is not defined');
   }
 
-  const cached = getCached();
-
-  if (cached.conn && mongoose.connection.readyState === 1) {
-    return cached.conn;
+  if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
+    throw new Error('MONGODB_URI must start with mongodb:// or mongodb+srv://');
   }
 
-  if (!cached.promise) {
-    cached.promise = mongoose
-      .connect(process.env.MONGODB_URI, {
+  return uri;
+};
+
+const getCache = () => {
+  if (!global.__libraryDb) {
+    global.__libraryDb = { conn: null, promise: null };
+  }
+
+  return global.__libraryDb;
+};
+
+const resetCache = () => {
+  const cache = getCache();
+  cache.conn = null;
+  cache.promise = null;
+};
+
+const connectDB = async () => {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+
+  const cache = getCache();
+
+  if (cache.conn && mongoose.connection.readyState === 1) {
+    return cache.conn;
+  }
+
+  if (mongoose.connection.readyState === 2 || mongoose.connection.readyState === 3) {
+    try {
+      await mongoose.disconnect();
+    } catch (error) {
+      console.warn('Mongo disconnect warning:', error.message);
+    }
+    resetCache();
+  }
+
+  if (!cache.promise) {
+    const uri = getUri();
+
+    cache.promise = mongoose
+      .connect(uri, {
         serverSelectionTimeoutMS: CONNECT_TIMEOUT_MS,
         connectTimeoutMS: CONNECT_TIMEOUT_MS,
-        socketTimeoutMS: 20000,
+        socketTimeoutMS: 15000,
         maxPoolSize: 1,
         minPoolSize: 0,
-        family: 4,
         autoIndex: false,
       })
       .then((instance) => {
-        cached.conn = instance.connection;
-        return cached.conn;
+        cache.conn = instance.connection;
+        return cache.conn;
       })
       .catch((error) => {
-        cached.promise = null;
-        cached.conn = null;
+        resetCache();
         throw error;
       });
   }
 
-  const timeoutError = new Error(
-    `Database connection timed out after ${CONNECT_TIMEOUT_MS}ms. Check MONGODB_URI and MongoDB Atlas network access (allow 0.0.0.0/0).`
-  );
+  const timeoutMessage =
+    'MongoDB connection timed out. In Atlas: Network Access → allow 0.0.0.0/0, verify MONGODB_URI user/password, then redeploy.';
 
-  try {
-    return await Promise.race([
-      cached.promise,
-      new Promise((_, reject) => {
-        setTimeout(() => reject(timeoutError), CONNECT_TIMEOUT_MS + 500);
-      }),
-    ]);
-  } catch (error) {
-    cached.promise = null;
-    cached.conn = null;
-    throw error;
-  }
+  return Promise.race([
+    cache.promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(timeoutMessage)), CONNECT_TIMEOUT_MS + 1000);
+    }),
+  ]);
 };
 
 module.exports = connectDB;

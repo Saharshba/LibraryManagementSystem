@@ -1,6 +1,9 @@
 {
   "name": "library-management-system",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "workspaces": [
     "server",
     "client"
@@ -23,7 +26,6 @@
     "express-validator": "^7.2.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.7.1",
-    "serverless-http": "^4.0.0"
+    "mongoose": "^8.7.1"
   }
 }

@@ -1,62 +1,65 @@
-# Vercel-only deployment
+# Deploy on Vercel + MongoDB Atlas
 
-This project can be deployed entirely on Vercel:
-- Frontend: React app from `client`
-- Backend: Serverless API from `api/index.js`
-- Database: MongoDB Atlas
+## 1. MongoDB Atlas setup
 
-## One-time setup required from you
+1. Create a free cluster at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas).
+2. **Database Access** → Add user (e.g. `libraryadmin`) with a password. Save the password.
+3. **Network Access** → **Add IP Address** → **Allow Access from Anywhere** (`0.0.0.0/0`).  
+   Required so Vercel serverless functions can connect.
+4. **Database** → **Connect** → **Drivers** → copy the connection string.  
+   Example shape:
+   ```
+   mongodb+srv://libraryadmin:YOUR_PASSWORD@cluster0.xxxxx.mongodb.net/library_management?retryWrites=true&w=majority
+   ```
+5. Replace `YOUR_PASSWORD` in the URI. If the password contains `@`, `#`, `/`, etc., [URL-encode](https://www.w3schools.com/tags/ref_urlencode.asp) it (`@` → `%40`).
+6. Ensure the cluster is **not paused** (Atlas pauses inactive free clusters).
 
-1. Create a Vercel account and connect this GitHub repository.
-2. Create a MongoDB Atlas cluster and get the connection string.
-3. Add these environment variables in Vercel:
-   - `MONGODB_URI`
-   - `JWT_SECRET`
-   - `NODE_ENV=production`
-4. Deploy.
+## 2. Vercel environment variables
 
-## Paths in the repo that matter
+Vercel project → **Settings** → **Environment Variables** → add for **Production** (and Preview if needed):
 
-- `vercel.json` - Vercel build and routing config
-- `api/index.js` - serverless backend entrypoint
-- `server/src/app.js` - Express app
-- `client/` - React frontend
-- `package.json` - workspace scripts
+| Name | Value |
+|------|--------|
+| `MONGODB_URI` | Your full Atlas `mongodb+srv://...` string |
+| `JWT_SECRET` | Long random string (32+ chars). Generate: `openssl rand -base64 48` |
+| `NODE_ENV` | `production` (optional) |
 
-## Vercel project settings
+Do **not** use `mongodb://127.0.0.1` on Vercel.
 
-- Project root: repository root
-- Build command: `npm run build --workspace client`
-- Output directory: `client/dist`
-- Install command: leave default or use `npm install`
+After saving variables, go to **Deployments** → **⋯** → **Redeploy** (required).
 
-## After deploy
+## 3. Deploy from GitHub
 
-Your app will automatically redeploy on every push to `main`.
+- Root directory: repository root
+- Build: automatic from `vercel.json`
+- Push to `main` to trigger deploy
 
-Test the API after deploy:
+## 4. Test after deploy
 
-- `https://<your-vercel-domain>/api/health` should return `{"status":"ok"}`
-- Sign in with the seeded admin account (see README)
+Replace `YOUR_APP` with your Vercel hostname (e.g. `bhaskarbookscorner.vercel.app`).
 
-## Login troubleshooting
+| URL | Expected |
+|-----|----------|
+| `https://YOUR_APP/api/health` | `{"status":"ok","service":"library-api"}` — instant, no database |
+| `https://YOUR_APP/api/ready` | `{"status":"ready","database":"connected"}` — tests MongoDB |
+| Login page | `admin` / `<seeded-password>` |
 
-If the site loads but sign-in fails or you see **504 FUNCTION_INVOCATION_TIMEOUT**:
+If **health** works but **ready** returns 503, the problem is MongoDB (URI, password, or Atlas network access).
 
-1. Confirm `MONGODB_URI` and `JWT_SECRET` are set for **Production** in Vercel (Settings → Environment Variables → redeploy after saving).
-2. Use a **MongoDB Atlas** connection string (`mongodb+srv://...`), not `mongodb://127.0.0.1`.
-3. In Atlas → **Network Access**, add `0.0.0.0/0` (allow from anywhere) so Vercel can connect.
-4. In Atlas → **Database Access**, ensure the database user password matches the URI (special characters must be URL-encoded).
-5. Test without the database: `https://<your-app>/api/health` should return `{"status":"ok"}` immediately.
-6. If health works but login returns 503, the API cannot reach MongoDB — fix the URI or Atlas network rules, then redeploy.
-7. Default seeded credentials: username `admin`, password `<seeded-password>`.
+If **ready** works but login fails, check Vercel function logs for auth errors.
 
-## Important note
+## 5. Default login
 
-Fully zero-maintenance hosting is not realistic because Vercel and MongoDB still require:
-- account access
-- environment variable management
-- occasional dependency updates
-- database credential rotation if needed
+| Role | Username | Password |
+|------|----------|----------|
+| Admin | `admin` | `<seeded-password>` |
+| User | `user` | `<seeded-password>` |
 
-The deployment itself, however, is fully automated after the initial setup.
+## 6. Common errors
+
+| Symptom | Fix |
+|---------|-----|
+| 504 timeout on login | `MONGODB_URI` wrong or Atlas blocks Vercel → fix URI, allow `0.0.0.0/0`, redeploy |
+| 503 “MongoDB connection timed out” | Same as above |
+| 500 “JWT_SECRET is not set” | Add `JWT_SECRET` in Vercel, redeploy |
+| 401 invalid password | Use `admin` / `<seeded-password>` after `/api/ready` succeeds |

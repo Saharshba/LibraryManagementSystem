@@ -1,14 +1,32 @@
 {
   "version": 2,
+  "installCommand": "npm install && npm install --prefix api",
   "buildCommand": "npm run build --workspace client",
   "outputDirectory": "client/dist",
   "functions": {
     "api/index.js": {
       "memory": 1024,
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "server/src/**"
+    },
+    "api/ready.js": {
+      "memory": 1024,
+      "maxDuration": 15,
+      "includeFiles": "server/src/**"
+    },
+    "api/health.js": {
+      "maxDuration": 10
     }
   },
   "rewrites": [
+    {
+      "source": "/api/health",
+      "destination": "/api/health.js"
+    },
+    {
+      "source": "/api/ready",
+      "destination": "/api/ready.js"
+    },
     {
       "source": "/api/(.*)",
       "destination": "/api/index.js"

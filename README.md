@@ -42,17 +42,20 @@ The admin account is seeded automatically on first run:
 - Username: `admin`
 - Password: `<seeded-password>`
 
-## Deployment Notes
+## Deployment Notes (Vercel)
 
-Vercel is configured to build the React client from `client/` and expose the API through `api/index.js`.
+See **[VERCEL_DEPLOY.md](./VERCEL_DEPLOY.md)** for full Atlas + Vercel setup.
 
-Set these environment variables in Vercel:
+Required Vercel environment variables:
 
-- `MONGODB_URI`
-- `JWT_SECRET`
-- `PORT` is not required on Vercel and can stay local-only
+- `MONGODB_URI` — MongoDB Atlas `mongodb+srv://...` connection string
+- `JWT_SECRET` — long random secret
 
-The local version in this repo still uses the Express server in `server/` for development clarity.
+After deploy, test:
+
+1. `https://<your-app>/api/health` — should respond immediately
+2. `https://<your-app>/api/ready` — confirms database connection
+3. Sign in with `admin` / `<seeded-password>`
 
 ## MongoDB
 

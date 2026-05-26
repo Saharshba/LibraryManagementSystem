@@ -26,7 +26,17 @@ app.use(
 );
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', service: 'library-api' });
+});
+
+app.get('/api/ready', async (req, res) => {
+  try {
+    const connectDB = require('./config/db');
+    await connectDB();
+    res.json({ status: 'ready', database: 'connected' });
+  } catch (error) {
+    res.status(503).json({ status: 'not-ready', message: error.message });
+  }
 });
 
 app.use('/api/auth', authRoutes);
