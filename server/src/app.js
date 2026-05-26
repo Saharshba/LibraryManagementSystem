@@ -32,8 +32,13 @@ app.get('/api/health', (req, res) => {
 app.get('/api/ready', async (req, res) => {
   try {
     const connectDB = require('./config/db');
+    const { getDatabaseName } = require('./config/db');
     await connectDB();
-    res.json({ status: 'ready', database: 'connected' });
+    res.json({
+      status: 'ready',
+      database: getDatabaseName(),
+      connected: true,
+    });
   } catch (error) {
     res.status(503).json({ status: 'not-ready', message: error.message });
   }

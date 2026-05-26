@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 mongoose.set('bufferCommands', false);
 
 const CONNECT_TIMEOUT_MS = 6000;
+const DEFAULT_DB_NAME = 'library_management';
+
+const getDatabaseName = () => process.env.MONGODB_DB_NAME?.trim() || DEFAULT_DB_NAME;
 
 const getUri = () => {
   const uri = process.env.MONGODB_URI?.trim();
@@ -33,8 +36,15 @@ const resetCache = () => {
 };
 
 const connectDB = async () => {
+  const databaseName = getDatabaseName();
+
   if (mongoose.connection.readyState === 1) {
-    return mongoose.connection;
+    if (mongoose.connection.db?.databaseName === databaseName) {
+      return mongoose.connection;
+    }
+
+    await mongoose.disconnect();
+    resetCache();
   }
 
   const cache = getCache();
@@ -57,6 +67,7 @@ const connectDB = async () => {
 
     cache.promise = mongoose
       .connect(uri, {
+        dbName: databaseName,
         serverSelectionTimeoutMS: CONNECT_TIMEOUT_MS,
         connectTimeoutMS: CONNECT_TIMEOUT_MS,
         socketTimeoutMS: 15000,
@@ -66,6 +77,7 @@ const connectDB = async () => {
       })
       .then((instance) => {
         cache.conn = instance.connection;
+        console.log(`MongoDB connected to database: ${instance.connection.db.databaseName}`);
         return cache.conn;
       })
       .catch((error) => {
@@ -86,3 +98,5 @@ const connectDB = async () => {
 };
 
 module.exports = connectDB;
+module.exports.getDatabaseName = getDatabaseName;
+module.exports.DEFAULT_DB_NAME = DEFAULT_DB_NAME;

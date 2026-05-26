@@ -1,4 +1,5 @@
 const connectDB = require('../server/src/config/db');
+const { getDatabaseName } = require('../server/src/config/db');
 
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
@@ -15,7 +16,13 @@ module.exports = async (req, res) => {
     await connectDB();
 
     res.statusCode = 200;
-    res.end(JSON.stringify({ status: 'ready', database: 'connected' }));
+    res.end(
+      JSON.stringify({
+        status: 'ready',
+        database: getDatabaseName(),
+        connected: true,
+      })
+    );
   } catch (error) {
     console.error('Ready check failed:', error);
     res.statusCode = 503;

@@ -1,17 +1,17 @@
 const User = require('../models/User');
+const { ADMIN_ACCOUNT, LEGACY_ADMIN_USERNAMES } = require('../constants/adminAccount');
 
-const ADMIN_PASSWORD_HASH = '$2a$10$waphk26UEMNG.7xiErwtMOm5/WWSAOBkNXDSyFL40EbY0DBh4KJ4S';
 const USER_PASSWORD_HASH = '$2a$10$m/QQ1XfykkQnG.Ou13qEiOm95oGWQUCVpz.wtuYzm.f.4cBpTzpfG';
 
 const SEED_ACCOUNTS = [
   {
-    username: 'BhaskarAdmin',
-    passwordHash: ADMIN_PASSWORD_HASH,
-    role: 'admin',
-    fullName: 'Bhaskar Admin',
-    email: 'bhaskaradmin@bhaskarbookscorner.local',
-    address: 'Library Headquarters',
-    contactNumber: '0000000000',
+    username: ADMIN_ACCOUNT.username,
+    passwordHash: ADMIN_ACCOUNT.passwordHash,
+    role: ADMIN_ACCOUNT.role,
+    fullName: ADMIN_ACCOUNT.fullName,
+    email: ADMIN_ACCOUNT.email,
+    address: ADMIN_ACCOUNT.address,
+    contactNumber: ADMIN_ACCOUNT.contactNumber,
   },
   {
     username: 'user',
@@ -23,8 +23,6 @@ const SEED_ACCOUNTS = [
     contactNumber: '9999999999',
   },
 ];
-
-const LEGACY_ADMIN_USERNAMES = ['admin'];
 
 let seedPromise = null;
 

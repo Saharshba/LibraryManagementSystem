@@ -19,6 +19,7 @@ A local-first library management system built with React, Node.js, Express, and 
 
    ```env
    MONGODB_URI=mongodb://127.0.0.1:27017/library_management
+   MONGODB_DB_NAME=library_management
    JWT_SECRET=replace-with-a-long-random-secret
    PORT=5000
    ```
@@ -48,7 +49,8 @@ See **[VERCEL_DEPLOY.md](./VERCEL_DEPLOY.md)** for full Atlas + Vercel setup.
 
 Required Vercel environment variables:
 
-- `MONGODB_URI` — MongoDB Atlas `mongodb+srv://...` connection string
+- `MONGODB_URI` — MongoDB Atlas `mongodb+srv://.../library_management?...`
+- `MONGODB_DB_NAME` — `library_management` (optional; enforced by default)
 - `JWT_SECRET` — long random secret
 
 After deploy, test:

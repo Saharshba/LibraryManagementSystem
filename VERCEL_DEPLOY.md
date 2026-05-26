@@ -11,6 +11,8 @@
    ```
    mongodb+srv://libraryadmin:YOUR_PASSWORD@cluster0.xxxxx.mongodb.net/library_management?retryWrites=true&w=majority
    ```
+   The database name **must** be `library_management` (already created in Atlas).
+
 5. Replace `YOUR_PASSWORD` in the URI. If the password contains `@`, `#`, `/`, etc., [URL-encode](https://www.w3schools.com/tags/ref_urlencode.asp) it (`@` → `%40`).
 6. Ensure the cluster is **not paused** (Atlas pauses inactive free clusters).
 
@@ -20,9 +22,12 @@ Vercel project → **Settings** → **Environment Variables** → add for **Prod
 
 | Name | Value |
 |------|--------|
-| `MONGODB_URI` | Your full Atlas `mongodb+srv://...` string |
+| `MONGODB_URI` | Atlas URI ending with `/library_management?...` (see above) |
+| `MONGODB_DB_NAME` | `library_management` (optional; defaults to this if omitted) |
 | `JWT_SECRET` | Long random string (32+ chars). Generate: `openssl rand -base64 48` |
 | `NODE_ENV` | `production` (optional) |
+
+The app always uses the **`library_management`** database (your existing Atlas database), not `test` or `admin`.
 
 Do **not** use `mongodb://127.0.0.1` on Vercel.
 
@@ -41,7 +46,7 @@ Replace `YOUR_APP` with your Vercel hostname (e.g. `bhaskarbookscorner.vercel.ap
 | URL | Expected |
 |-----|----------|
 | `https://YOUR_APP/api/health` | `{"status":"ok","service":"library-api"}` — instant, no database |
-| `https://YOUR_APP/api/ready` | `{"status":"ready","database":"connected"}` — tests MongoDB |
+| `https://YOUR_APP/api/ready` | `{"status":"ready","database":"library_management","connected":true}` |
 | Login page | `BhaskarAdmin` / `<seeded-password>` |
 
 If **health** works but **ready** returns 503, the problem is MongoDB (URI, password, or Atlas network access).
