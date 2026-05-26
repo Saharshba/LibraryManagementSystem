@@ -31,16 +31,31 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/ready', async (req, res) => {
   try {
+    const mongoose = require('mongoose');
     const connectDB = require('./config/db');
     const { getDatabaseName } = require('./config/db');
+    const User = require('./models/User');
+    const { ADMIN_ACCOUNT } = require('./constants/adminAccount');
+
     await connectDB();
+
+    const mongoDatabase = mongoose.connection.db?.databaseName || getDatabaseName();
+    const adminExists = await User.exists({ username: ADMIN_ACCOUNT.username, role: 'admin' });
+
     res.json({
       status: 'ready',
-      database: getDatabaseName(),
       connected: true,
+      databaseName: mongoDatabase,
+      expectedDatabase: getDatabaseName(),
+      adminUser: ADMIN_ACCOUNT.username,
+      adminReady: Boolean(adminExists),
     });
   } catch (error) {
-    res.status(503).json({ status: 'not-ready', message: error.message });
+    res.status(503).json({
+      status: 'not-ready',
+      connected: false,
+      message: error.message,
+    });
   }
 });
 
