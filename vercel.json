@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "installCommand": "npm install && npm install --prefix api",
+  "installCommand": "npm install --include=dev && npm install --prefix api",
   "buildCommand": "npm run build --workspace client",
   "outputDirectory": "client/dist",
   "functions": {
