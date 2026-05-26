@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../utils/date';
 import { collectDueAlerts } from '../utils/dueAlerts';
 import DueSoonNotice from '../components/DueSoonNotice';
+import { isActiveUserRequest } from '../utils/requestExpiry';
 
 const emptyRequestState = {
   requests: [],
@@ -80,13 +81,15 @@ export default function UserBooksPage() {
     [myBooks, user]
   );
 
+  const activeRequests = useMemo(() => requests.filter(isActiveUserRequest), [requests]);
+
   const requestMap = useMemo(() => {
     const map = new Map();
-    requests.forEach((entry) => {
+    activeRequests.forEach((entry) => {
       map.set(entry.book?._id, entry);
     });
     return map;
-  }, [requests]);
+  }, [activeRequests]);
 
   const requestBook = async (bookId) => {
     setBusyBookId(bookId);
@@ -231,12 +234,12 @@ export default function UserBooksPage() {
               </tr>
             </thead>
             <tbody>
-              {requests.length === 0 ? (
+              {activeRequests.length === 0 ? (
                 <tr>
                   <td colSpan={4}>You have not requested any books yet.</td>
                 </tr>
               ) : (
-                requests.map((entry) => (
+                activeRequests.map((entry) => (
                   <tr key={entry._id}>
                     <td>{entry.book?.title}</td>
                     <td>{entry.status}</td>

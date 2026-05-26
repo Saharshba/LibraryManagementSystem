@@ -1,6 +1,8 @@
 const { validationResult } = require('express-validator');
 const BookRequest = require('../models/BookRequest');
 const Book = require('../models/Book');
+const { runCleanup } = require('../jobs/requestCleanup');
+const { isActiveUserRequest } = require('../utils/requestExpiry');
 
 const populateRequest = () => [
   { path: 'book', select: 'title author genre assignedTo dueDate assignmentDate lendingDays', populate: { path: 'genre', select: 'name' } },
@@ -15,6 +17,8 @@ const createBookRequest = async (req, res) => {
   }
 
   const { bookId } = req.params;
+  await runCleanup();
+
   const book = await Book.findById(bookId);
 
   if (!book) {
@@ -24,11 +28,15 @@ const createBookRequest = async (req, res) => {
   const existingRequest = await BookRequest.findOne({
     book: bookId,
     user: req.user.id,
-    status: { $in: ['pending', 'accepted'] },
+    status: { $in: ['pending', 'accepted', 'denied'] },
   });
 
   if (existingRequest) {
-    return res.status(409).json({ message: 'You already requested this book' });
+    if (!isActiveUserRequest(existingRequest)) {
+      await BookRequest.deleteOne({ _id: existingRequest._id });
+    } else {
+      return res.status(409).json({ message: 'You already requested this book' });
+    }
   }
 
   const request = await BookRequest.create({
@@ -40,8 +48,12 @@ const createBookRequest = async (req, res) => {
 };
 
 const listMyRequests = async (req, res) => {
+  await runCleanup();
+
   const requests = await BookRequest.find({ user: req.user.id }).sort({ requestedAt: -1 }).populate(populateRequest());
-  return res.json({ requests });
+  const activeRequests = requests.filter(isActiveUserRequest);
+
+  return res.json({ requests: activeRequests });
 };
 
 const listRequests = async (req, res) => {

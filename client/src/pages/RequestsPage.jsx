@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import request from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../utils/date';
+import { isActiveUserRequest } from '../utils/requestExpiry';
 
 function RequestList({ onSelect }) {
   const [requests, setRequests] = useState([]);
@@ -14,7 +15,7 @@ function RequestList({ onSelect }) {
     const load = async () => {
       try {
         const payload = await request('/book-requests/me', { token });
-        setRequests(payload.requests);
+        setRequests(payload.requests.filter(isActiveUserRequest));
       } catch (e) {
         setError(e.message);
       }

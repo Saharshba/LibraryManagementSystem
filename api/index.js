@@ -6,6 +6,7 @@ if (!process.env.VERCEL) {
 
 const connectDB = require('../server/src/config/db');
 const seedAdmin = require('../server/src/utils/seedAdmin');
+const { runCleanup } = require('../server/src/jobs/requestCleanup');
 const app = require('../server/src/app');
 
 const runExpress = (req, res) =>
@@ -51,6 +52,7 @@ const initialize = async () => {
     initPromise = (async () => {
       await connectDB();
       await seedAdmin();
+      await runCleanup();
     })().catch((error) => {
       initPromise = null;
       throw error;

@@ -2,38 +2,53 @@ const BookRequest = require('../models/BookRequest');
 
 const RESET_HOURS = parseInt(process.env.REQUEST_RESET_HOURS || '24', 10);
 const DELETE_DAYS = parseInt(process.env.REQUEST_DELETE_DAYS || '30', 10);
-const INTERVAL_MINUTES = parseInt(process.env.REQUEST_CLEANUP_INTERVAL_MINUTES || '60', 10);
+
+const getResetBefore = () => new Date(Date.now() - RESET_HOURS * 60 * 60 * 1000);
+
+const expiredDeniedQuery = (resetBefore = getResetBefore()) => ({
+  status: 'denied',
+  $or: [
+    { respondedAt: { $lte: resetBefore } },
+    { respondedAt: null, requestedAt: { $lte: resetBefore } },
+  ],
+});
 
 async function runCleanup() {
-  try {
-    const now = new Date();
+  const now = new Date();
+  const resetBefore = getResetBefore();
 
-    // Reset accepted/denied requests older than RESET_HOURS back to pending
-    const resetBefore = new Date(now.getTime() - RESET_HOURS * 60 * 60 * 1000);
-    const resetResult = await BookRequest.updateMany(
-      { status: { $in: ['accepted', 'denied'] }, respondedAt: { $lte: resetBefore } },
-      { $set: { status: 'pending', respondedAt: null, respondedBy: null, adminNote: '' } }
+  const deniedDeleteResult = await BookRequest.deleteMany(expiredDeniedQuery(resetBefore));
+
+  const deleteBefore = new Date(now.getTime() - DELETE_DAYS * 24 * 60 * 60 * 1000);
+  const staleDeleteResult = await BookRequest.deleteMany({
+    requestedAt: { $lte: deleteBefore },
+    status: { $in: ['pending', 'accepted', 'denied'] },
+  });
+
+  if ((deniedDeleteResult?.deletedCount ?? 0) > 0 || (staleDeleteResult?.deletedCount ?? 0) > 0) {
+    console.info(
+      `Request cleanup: removed ${deniedDeleteResult.deletedCount || 0} expired denied, ${staleDeleteResult.deletedCount || 0} stale`
     );
-
-    // Delete requests older than DELETE_DAYS since requestedAt
-    const deleteBefore = new Date(now.getTime() - DELETE_DAYS * 24 * 60 * 60 * 1000);
-    const deleteResult = await BookRequest.deleteMany({ requestedAt: { $lte: deleteBefore } });
-
-    // Logging minimal info
-    if ((resetResult?.modifiedCount ?? 0) > 0 || (deleteResult?.deletedCount ?? 0) > 0) {
-      // eslint-disable-next-line no-console
-      console.info(`Request cleanup: reset ${resetResult.modifiedCount || 0}, deleted ${deleteResult.deletedCount || 0}`);
-    }
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('Request cleanup error:', err);
   }
+
+  return {
+    expiredDeniedRemoved: deniedDeleteResult?.deletedCount ?? 0,
+    staleRemoved: staleDeleteResult?.deletedCount ?? 0,
+  };
 }
 
 function startScheduler() {
-  // Run once immediately, then on interval
-  runCleanup().catch(() => {});
-  setInterval(runCleanup, INTERVAL_MINUTES * 60 * 1000);
+  const intervalMinutes = parseInt(process.env.REQUEST_CLEANUP_INTERVAL_MINUTES || '60', 10);
+
+  runCleanup().catch((err) => console.error('Request cleanup error:', err));
+  setInterval(() => {
+    runCleanup().catch((err) => console.error('Request cleanup error:', err));
+  }, intervalMinutes * 60 * 1000);
 }
 
-module.exports = { startScheduler };
+module.exports = {
+  runCleanup,
+  startScheduler,
+  RESET_HOURS,
+  expiredDeniedQuery,
+};
