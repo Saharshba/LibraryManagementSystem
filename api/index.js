@@ -8,8 +8,13 @@ let initializationPromise = null;
 const ensureReady = async () => {
   if (!initializationPromise) {
     initializationPromise = (async () => {
-      await connectDB();
-      await seedAdmin();
+      try {
+        await connectDB();
+        await seedAdmin();
+      } catch (error) {
+        initializationPromise = null;
+        throw error;
+      }
     })();
   }
 
