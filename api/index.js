@@ -1,3 +1,6 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../server/.env') });
+
 const serverless = require('serverless-http');
 const connectDB = require('../server/src/config/db');
 const seedAdmin = require('../server/src/utils/seedAdmin');
