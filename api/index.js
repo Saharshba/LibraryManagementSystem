@@ -4,24 +4,37 @@ const seedAdmin = require('../server/src/utils/seedAdmin');
 const app = require('../server/src/app');
 
 let serverlessHandler;
-let readyPromise;
+let dbReadyPromise;
+let seedPromise;
 
-const ensureReady = () => {
-  if (!readyPromise) {
-    readyPromise = connectDB()
-      .then(() => seedAdmin())
-      .catch((error) => {
-        readyPromise = null;
-        throw error;
-      });
+const needsDatabase = (req) => {
+  const path = (req.url || '').split('?')[0];
+  return path !== '/api/health';
+};
+
+const ensureDatabase = async () => {
+  if (!dbReadyPromise) {
+    dbReadyPromise = connectDB();
   }
 
-  return readyPromise;
+  await dbReadyPromise;
+
+  if (!seedPromise) {
+    seedPromise = seedAdmin().catch((error) => {
+      seedPromise = null;
+      console.error('Seed failed:', error);
+      throw error;
+    });
+  }
+
+  await seedPromise;
 };
 
 module.exports = async (req, res) => {
   try {
-    await ensureReady();
+    if (needsDatabase(req)) {
+      await ensureDatabase();
+    }
 
     if (!serverlessHandler) {
       serverlessHandler = serverless(app);
@@ -30,15 +43,18 @@ module.exports = async (req, res) => {
     return await serverlessHandler(req, res);
   } catch (error) {
     console.error('API handler error:', error);
-    res.statusCode = 500;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(
-      JSON.stringify({
-        message:
-          error.message === 'MONGODB_URI is not defined' || error.message === 'JWT_SECRET is not defined'
-            ? 'Server is misconfigured. Set MONGODB_URI and JWT_SECRET in Vercel environment variables.'
-            : error.message || 'Internal server error',
-      })
-    );
+
+    if (!res.headersSent) {
+      res.statusCode = error.message?.includes('timed out') ? 503 : 500;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          message:
+            error.message === 'MONGODB_URI is not defined'
+              ? 'Server is misconfigured. Set MONGODB_URI in Vercel environment variables.'
+              : error.message || 'Internal server error',
+        })
+      );
+    }
   }
 };

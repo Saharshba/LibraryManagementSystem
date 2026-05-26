@@ -41,12 +41,15 @@ Test the API after deploy:
 
 ## Login troubleshooting
 
-If the site loads but sign-in fails:
+If the site loads but sign-in fails or you see **504 FUNCTION_INVOCATION_TIMEOUT**:
 
-1. Confirm `MONGODB_URI` and `JWT_SECRET` are set for **Production** in Vercel.
-2. In MongoDB Atlas, allow access from anywhere (`0.0.0.0/0`) so Vercel serverless functions can connect.
-3. Open `/api/health` on your deployment. If it returns 500, check Vercel function logs for database or env errors.
-4. Default seeded credentials: username `admin`, password `<seeded-password>`.
+1. Confirm `MONGODB_URI` and `JWT_SECRET` are set for **Production** in Vercel (Settings → Environment Variables → redeploy after saving).
+2. Use a **MongoDB Atlas** connection string (`mongodb+srv://...`), not `mongodb://127.0.0.1`.
+3. In Atlas → **Network Access**, add `0.0.0.0/0` (allow from anywhere) so Vercel can connect.
+4. In Atlas → **Database Access**, ensure the database user password matches the URI (special characters must be URL-encoded).
+5. Test without the database: `https://<your-app>/api/health` should return `{"status":"ok"}` immediately.
+6. If health works but login returns 503, the API cannot reach MongoDB — fix the URI or Atlas network rules, then redeploy.
+7. Default seeded credentials: username `admin`, password `<seeded-password>`.
 
 ## Important note
 
