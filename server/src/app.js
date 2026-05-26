@@ -24,6 +24,14 @@ app.use(
     max: 200,
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: (req) => {
+      return (
+        req.headers['x-forwarded-for']?.split(',')[0].trim() ||
+        req.headers['x-real-ip'] ||
+        req.socket?.remoteAddress ||
+        'unknown'
+      );
+    },
   })
 );
 
