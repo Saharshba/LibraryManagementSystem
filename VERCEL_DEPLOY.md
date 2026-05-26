@@ -42,7 +42,7 @@ Replace `YOUR_APP` with your Vercel hostname (e.g. `bhaskarbookscorner.vercel.ap
 |-----|----------|
 | `https://YOUR_APP/api/health` | `{"status":"ok","service":"library-api"}` — instant, no database |
 | `https://YOUR_APP/api/ready` | `{"status":"ready","database":"connected"}` — tests MongoDB |
-| Login page | `admin` / `<seeded-password>` |
+| Login page | `BhaskarAdmin` / `<seeded-password>` |
 
 If **health** works but **ready** returns 503, the problem is MongoDB (URI, password, or Atlas network access).
 
@@ -52,7 +52,7 @@ If **ready** works but login fails, check Vercel function logs for auth errors.
 
 | Role | Username | Password |
 |------|----------|----------|
-| Admin | `admin` | `<seeded-password>` |
+| Admin | `BhaskarAdmin` | `<seeded-password>` |
 | User | `user` | `<seeded-password>` |
 
 ## 6. Common errors
@@ -62,4 +62,4 @@ If **ready** works but login fails, check Vercel function logs for auth errors.
 | 504 timeout on login | `MONGODB_URI` wrong or Atlas blocks Vercel → fix URI, allow `0.0.0.0/0`, redeploy |
 | 503 “MongoDB connection timed out” | Same as above |
 | 500 “JWT_SECRET is not set” | Add `JWT_SECRET` in Vercel, redeploy |
-| 401 invalid password | Use `admin` / `<seeded-password>` after `/api/ready` succeeds |
+| 401 invalid password | Use `BhaskarAdmin` / `<seeded-password>` after `/api/ready` succeeds |

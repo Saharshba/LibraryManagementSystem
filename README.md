@@ -39,7 +39,7 @@ A local-first library management system built with React, Node.js, Express, and 
 
 The admin account is seeded automatically on first run:
 
-- Username: `admin`
+- Username: `BhaskarAdmin`
 - Password: `<seeded-password>`
 
 ## Deployment Notes (Vercel)
@@ -55,7 +55,7 @@ After deploy, test:
 
 1. `https://<your-app>/api/health` — should respond immediately
 2. `https://<your-app>/api/ready` — confirms database connection
-3. Sign in with `admin` / `<seeded-password>`
+3. Sign in with `BhaskarAdmin` / `<seeded-password>`
 
 ## MongoDB
 
