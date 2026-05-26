@@ -41,7 +41,7 @@ A local-first library management system built with React, Node.js, Express, and 
 The admin account is seeded automatically on first run:
 
 - Username: `BhaskarAdmin`
-- Password: `<seeded-password>`
+- Password: `<your-admin-password>`
 
 ## Deployment Notes (Vercel)
 

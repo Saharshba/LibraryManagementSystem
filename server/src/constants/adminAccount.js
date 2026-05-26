@@ -2,7 +2,6 @@ const ADMIN_PASSWORD_HASH = '$2a$10$waphk26UEMNG.7xiErwtMOm5/WWSAOBkNXDSyFL40EbY
 
 const ADMIN_ACCOUNT = {
   username: 'BhaskarAdmin',
-  password: '<seeded-password>',
   passwordHash: ADMIN_PASSWORD_HASH,
   role: 'admin',
   fullName: 'Bhaskar Admin',

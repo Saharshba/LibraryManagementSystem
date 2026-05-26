@@ -1,5 +1,5 @@
 /**
- * One-time migration: update MongoDB admin user to BhaskarAdmin / <seeded-password>
+ * One-time migration: update MongoDB admin user to the seeded admin account
  * Run from repo root: npm run migrate:admin --workspace server
  */
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
@@ -63,7 +63,6 @@ const migrateAdmin = async () => {
 
   console.log('\nMongoDB admin credentials are now:');
   console.log(`  Username: ${ADMIN_ACCOUNT.username}`);
-  console.log(`  Password: ${ADMIN_ACCOUNT.password}`);
   console.log(`  User id:  ${adminUser._id.toString()}`);
 };
 
