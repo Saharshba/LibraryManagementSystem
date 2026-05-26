@@ -2,6 +2,12 @@
   "version": 2,
   "buildCommand": "npm run build --workspace client",
   "outputDirectory": "client/dist",
+  "functions": {
+    "api/index.js": {
+      "memory": 512,
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
