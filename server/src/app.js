@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
+const { serverlessRateLimit } = require('./utils/rateLimit');
 const mongoSanitize = require('express-mongo-sanitize');
 const authRoutes = require('./routes/authRoutes');
 const genreRoutes = require('./routes/genreRoutes');
@@ -19,19 +19,9 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(mongoSanitize());
 app.use(
-  rateLimit({
+  serverlessRateLimit({
     windowMs: 15 * 60 * 1000,
     max: 200,
-    standardHeaders: true,
-    legacyHeaders: false,
-    keyGenerator: (req) => {
-      return (
-        req.headers['x-forwarded-for']?.split(',')[0].trim() ||
-        req.headers['x-real-ip'] ||
-        req.socket?.remoteAddress ||
-        'unknown'
-      );
-    },
   })
 );
 
